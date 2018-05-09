@@ -16,19 +16,21 @@
 #define ALTER_REPEAT 2
 
 #define INPUT(g) ( *(gpio + (g)/10) & ~(7 << 3*((g)%10)) )
-#define READ(g) (( *(gpio + (0x34 >> 2) + (g)/32) >> (((g)%32))) & 1)
+#define READ(g) (( *(gpio + 13 + (g)/32) >> (((g)%32))) & 1)
 
-#define GPPUD ( *(gpio + (0x94 >> 2)) )
-#define xGPPUDCLK(g) ( *(gpio + (0x98 >> 2) + (g)/32) ) 
+#define GPPUD ( *(gpio + 37) )
+#define xGPPUDCLK(g) ( *(gpio + 38 + (g)/32) ) 
 #define GPPUDCLK(g,s) ( (s==1) ? ( xGPPUDCLK(g) |= (1 << (g)%32) ) : ( xGPPUDCLK(g) &= ~(1 << (g)%32) ) )
 
 #define PULL_RESISTOR_DISABLE 0x00
 #define PULL_RESISTOR_DOWN 0x01
 #define PULL_RESISTOR_UP 0x02
 
-int* gpio = NULL;           //mmap
-int falarm = 0;             //Determine false alarm is enabled.
-int alter = ALTER_REPEAT;   //A timeout for shutdown raspberry pi.
+int* gpio = NULL;                   //mmap
+int presistor = PULL_RESISTOR_DOWN;
+int falarm = 0;                     //Determine false alarm is enabled.
+int persist = 1;                    //Keep specified pin in state input and pull resistor
+int alter = ALTER_REPEAT;           //A timeout for shutdown raspberry pi.
 
 void* mappingIO(){
     int fd = open(MEMFILE, O_RDWR | O_SYNC);
@@ -54,14 +56,38 @@ int programFlags(int args,char** argv){
     for(int i = 1;i < args;i++){
         if(strcasecmp(argv[i],"--false-alarm") == 0)
             falarm = 1;
-        else if(strcasecmp(argv[i],"--alter") == 0)
-            ;      //Not implemented               
+        else if(strcasecmp(argv[i],"--no-persist") == 0)
+            persist = 0;
         else{
             printf("Unknow flags %s\n",argv[i]);
             return 0;
         }
     }
     return 1;
+}
+
+int getPullResistor(int pin){
+    if( 0<= pin && pin <= 8)    return PULL_RESISTOR_UP;
+    if(34<= pin && pin <=36)    return PULL_RESISTOR_UP;
+    if(46<= pin && pin <=53)    return PULL_RESISTOR_UP;
+    return PULL_RESISTOR_DOWN;
+}
+
+int getTrigger(int pin){
+    switch(getPullResistor(pin)){
+        case PULL_RESISTOR_UP:
+            return 0;
+        case PULL_RESISTOR_DOWN:
+            return 1;
+        default:
+            return -1;
+    }
+}
+
+void setGPIO(int pin){
+    INPUT(pin);                 //treat S_INPUT as input port
+    GPPUD = getTrigger(pin);    //enable pull resistor
+    GPPUDCLK(pin,1);            //enable pull resistor in port S_INPUT
 }
 
 int main(int args, char** argv){
@@ -84,27 +110,27 @@ int main(int args, char** argv){
         return -3;
     }
 
-    //setup port
-    int presistor = PULL_RESISTOR_DOWN;
-    INPUT(S_INPUT);                 //treat S_INPUT as input port
-    GPPUD = presistor;              //enable pull resistor
-    GPPUDCLK(S_INPUT,1);            //enable pull resistor in port S_INPUT
-    
-    //Detecting S_INPUT voltage level
+    setGPIO(S_INPUT);
+ 
     int alter = ALTER_REPEAT;
     while(1){
-
-        int trigger = PULL_RESISTOR_DOWN == presistor ? 1 : 
-                    ( PULL_RESISTOR_UP   == presistor ? 0 : -1 );
-        alter = (READ(S_INPUT) == trigger) ? alter-1 : ALTER_REPEAT;
+        if(persist)
+            setGPIO(S_INPUT);
         
-        if(0 >= alter){
+        if(READ(S_INPUT) == getTrigger(S_INPUT))
+            alter -= 1;
+        else
+            alter = ALTER_REPEAT;
+        
+
+        if(alter <= 0){
             sync();
             
             if(falarm){
                 printf("False alarm!\n");
-            }else if( -1 == reboot(RB_POWER_OFF) ){
-                perror("Can not reboot. ");
+            }else{
+                reboot(RB_POWER_OFF);
+                perror("Can not reboot, this process still alive ._.");
                 return -1;
             }
         }
