@@ -9,7 +9,7 @@
 #define SLEEP_PERIOD 1
 #define ALTER_REPEAT 10
 
-int* gpio = NULL;                   
+volatile int* gpio = NULL;                   
 int falarm = 0;                     //False alarm
 int persist = 1;                    //Persist GPIO mode
 int spin = DEFAULT_PIN;             //specified pin
