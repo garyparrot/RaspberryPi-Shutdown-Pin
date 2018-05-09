@@ -12,7 +12,7 @@
 #define MEMFILE      ("/dev/gpiomem")
 #define S_INPUT      (21)
 #define SLEEP_PERIOD (5)
-#define ALTER_REPEAT (3)
+#define ALTER_REPEAT (2)
 
 #define INPUT(g) ( *(gpio + (g)/10) & ~(7 << 3*((g)%10)) )
 #define READ(g) (( *(gpio + (0x34 >> 2) + (g)/32) >> (((g)%32))) & 1)
@@ -47,6 +47,7 @@ void* mappingIO(){
 int main(int args, char** argv){
     errno = 0;
     setbuffer(stdin,NULL,0);
+    setbuffer(stdout,NULL,0);
 
     for(int i = 1;i < args;i++){
         if(strcasecmp(argv[i],"--false-alarm") == 0)
@@ -54,14 +55,14 @@ int main(int args, char** argv){
         else if(strcasecmp(argv[i],"--alter") == 0)
             ;      //Not implemented               
         else{
-            perror("Unknow flags %s\n",argv[i]);
+            printf("Unknow flags %s\n",argv[i]);
             return -2;
         }
     }
     
     int* gpio = (int*)mappingIO();
     if(gpio == NULL){
-        perror("Can't mapping process, please check for permission, error code = %d. ",errno);
+        printf("Can't mapping process, please check for permission, error code = %d. \n",errno);
         return -1;
     }
 
@@ -74,17 +75,19 @@ int main(int args, char** argv){
     int alter = ALTER_REPEAT;
     while(1){
 
-        if(READ(S_INPUT))   alter-=1;
-        else                alter = ALTER_REPEAT;
-
+        if(READ(S_INPUT) && alter > 0)  
+            alter-=1;
+        else           
+            alter = ALTER_REPEAT;
+        
         if(0 >= alter){
             
             sync();
             
             if(falarm){     
-                printf("False alarm!");
+                printf("False alarm!\n");
             }else if( -1 == reboot(RB_POWER_OFF) ){
-                perror("Can't reboot, errno code = %d\n",errno);
+                printf("Can't reboot, errno code = %d\n",errno);
                 return -3;
             }               
         }
