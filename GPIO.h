@@ -22,7 +22,7 @@
 #define PULL_RESISTOR_DOWN    0x01
 #define PULL_RESISTOR_UP      0x02
 
-extern int* gpio;
+extern volatile int* gpio;
 
 void* mappingIO(void);
 int getPullResistor(int);
