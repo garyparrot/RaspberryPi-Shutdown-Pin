@@ -44,20 +44,23 @@ Now connect GPIO 21 to Vcc, wait for 10 seconds, there should be a string "False
 Because of some architecture difference, the I/O Peripherals physical address is different between pi 1 and pi 2/3.
 For raspberry pi 1 user, make the change to source code as below demonstration.
 ```
-Before:     #define BASE\_IO\_PREI 0x3F000000
-After:      #define BASE\_IO\_PREI 0x20000000
+./GPIO.h
+Before:     #define BASE_IO_PREI 0x3F000000
+After:      #define BASE_IO_PREI 0x20000000
 ```
 
 If you don't have a file called "/dev/gpiomem", you need to make the changes.
 ```
-Before:     #define MEMFILE "/dev/gpiomem"
+./GPIO.h
+Before:     #define MEMFILE "/dev/gpiomem"
 After:      #define MEMFILE "/dev/mem"
 ```
 
 Old raspberry pi doesn't have GPIO 21, which is my default pin.
 You can modify default pin as below
 ```
-Before:     #define DEFAULT_PIN 21
+./shutdown-pin.c
+Before:     #define DEFAULT_PIN 21
 After:      #define DEFAULT_PIN <THE DEFAULT PIN YOU LIKE>
 ``` 
 
