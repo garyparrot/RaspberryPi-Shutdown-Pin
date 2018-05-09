@@ -1,8 +1,8 @@
 # RaspberryPi-Shutdown-Pin
 
-## Getter Started
 You can shutdown your raspberry pi by given voltage(HIGH or LOW) to specified pin
 
+## The beginning
 One day I block myself out of raspberry pi because I shutdown ssh daemon by accident.
 And you know raspberry pi doesn't have a power button, so I do it on my own.
 
