@@ -8,9 +8,9 @@ All these code is writing in C, it may require some permission to access gpiomem
 Because of this program would shutdown your raspberry pi, you need to give it permission by sudo or thing like that.
 
 ## Configuration
-The default shutdown pin is GPIO 21, To change specified pin, Modify S\_INPUT marco value
+The default shutdown pin is GPIO 21, To change specified pin, Modify S\_INPUT marco value.
 Note that each pin only support one kind of pull resisitor.
-It might be up resistor or down resistor, you need to look up BCM2835 datasheet(althougt it is old and buggy but still provide some useful info) in page 102 and 103.
+It might be pull-up-resistor or pull-down-resistor, you need to look up BCM2835 datasheet(althougt it is old and buggy but still provide some useful info) in page 102 and 103.
 ```
 Before:     #define S_INPUT 21
 After:      #define S_INPUT <The GPIO pin you like>
