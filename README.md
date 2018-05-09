@@ -35,10 +35,14 @@ the "--false-alarm" tag won't reboot your raspberry pi if this flag is specified
 Now connect GPIO 21 to Vcc, wait for 10 seconds, there should be a string "False alarm!" show up in your terminal.
 
 ## Flags
-* --false-alarm : Replace shutdown function for a string output.
-* --no-persist  : This program would keep the specified pin in corresponding mode(Input, Pull resistor), use this flag to disable this function, NOTE THAT IF SOMETHING MODIFY YOU SPECIFIED PIN MODE, IT MIGHT BLOW YOUR RASPBERRY PI ONCE YOU CONNECT THAT PIN TO VCC OR GND!!!
-* --quiet       : This program would stop sending any output.
-* --pin n       : Specified a pin as shutdown trigger, n should be a number which between 0 and 53
+| flags |info|
+| -------------- |----|
+|--false-alarm | Replace shutdown function for a string output.|
+|--no-persist | This program would keep the specified pin in corresponding mode(Input, Pull resistor), this flag disable it. |
+|--quiet | This program would stop sending any output.|
+|--pin n | Specified a pin as shutdown trigger, n should be a number which between 0 and 53|
+
+__Something about --no-persist__ : Note that if something modify your specified pin mode, It might blow your raspberry pi once you connect that pin to Vcc or GND!!!
 
 ## Old raspberry pi configuration
 Because of some architecture difference, the I/O Peripherals physical address is different between pi 1 and pi 2/3.
