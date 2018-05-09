@@ -5,6 +5,7 @@
 #include<unistd.h>
 #include<strings.h>
 #include<errno.h>
+#include<sys/types.h>
 
 #define BASE_IO_PREI 0x3F000000
 #define BASE_GPIO    0x200000
@@ -25,6 +26,7 @@
 #define PULL_RESISTOR_DOWN 0x01
 #define PULL_RESISTOR_UP 0x02
 
+int* gpio = NULL;           //mmap
 int falarm = 0;             //Determine false alarm is enabled.
 int alter = ALTER_REPEAT;   //A timeout for shutdown raspberry pi.
 
@@ -44,11 +46,11 @@ void* mappingIO(){
     return (result == MAP_FAILED) ? NULL : result;
 }
 
-int main(int args, char** argv){
-    errno = 0;
-    setbuffer(stdin,NULL,0);
-    setbuffer(stdout,NULL,0);
+int isRoot(){
+    return getuid() == 0;
+}
 
+int programFlags(int args,char** argv){
     for(int i = 1;i < args;i++){
         if(strcasecmp(argv[i],"--false-alarm") == 0)
             falarm = 1;
@@ -56,14 +58,30 @@ int main(int args, char** argv){
             ;      //Not implemented               
         else{
             printf("Unknow flags %s\n",argv[i]);
-            return -2;
+            return 0;
         }
     }
-    
-    int* gpio = (int*)mappingIO();
-    if(gpio == NULL){
-        printf("Can't mapping process, please check for permission, error code = %d. \n",errno);
+    return 1;
+}
+
+int main(int args, char** argv){
+    errno = 0;
+    setbuffer(stdin,NULL,0);
+    setbuffer(stdout,NULL,0);
+
+    if(isRoot() == 0){
+        printf("In order to shutdown device, you must to run this program with root permission. ");
         return -1;
+    }
+
+    if(programFlags(args,argv) == 0){ 
+        printf("Please remove incorrect flags.");
+        return -2;
+    }
+    
+    if((gpio = (int*)mappingIO()) == NULL){
+        printf("Can not mapping process, please check for permission. errno code=%d",errno);
+        return -3;
     }
 
     //setup port
@@ -75,21 +93,17 @@ int main(int args, char** argv){
     int alter = ALTER_REPEAT;
     while(1){
 
-        if(READ(S_INPUT) && alter > 0)  
-            alter-=1;
-        else           
-            alter = ALTER_REPEAT;
+        alter = (READ(S_INPUT)) ? alter-1 : ALTER_REPEAT;
         
         if(0 >= alter){
-            
             sync();
             
             if(falarm){     
                 printf("False alarm!\n");
             }else if( -1 == reboot(RB_POWER_OFF) ){
-                printf("Can't reboot, errno code = %d\n",errno);
-                return -3;
-            }               
+                perror("Can not reboot. ");
+                return -1;
+            }
         }
 
         sleep(SLEEP_PERIOD);
