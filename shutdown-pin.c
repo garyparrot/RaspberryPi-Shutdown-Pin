@@ -10,10 +10,10 @@
 #define BASE_IO_PREI 0x3F000000
 #define BASE_GPIO    0x200000
 #define SIZE         0xB0
-#define MEMFILE      ("/dev/gpiomem")
-#define S_INPUT      (21)
-#define SLEEP_PERIOD (5)
-#define ALTER_REPEAT (2)
+#define MEMFILE      "/dev/gpiomem"
+#define S_INPUT      21
+#define SLEEP_PERIOD 5
+#define ALTER_REPEAT 2
 
 #define INPUT(g) ( *(gpio + (g)/10) & ~(7 << 3*((g)%10)) )
 #define READ(g) (( *(gpio + (0x34 >> 2) + (g)/32) >> (((g)%32))) & 1)
@@ -85,20 +85,23 @@ int main(int args, char** argv){
     }
 
     //setup port
+    int presistor = PULL_RESISTOR_DOWN;
     INPUT(S_INPUT);                 //treat S_INPUT as input port
-    GPPUD = PULL_RESISTOR_DOWN;     //enable pull resistor
+    GPPUD = presistor;              //enable pull resistor
     GPPUDCLK(S_INPUT,1);            //enable pull resistor in port S_INPUT
-
+    
     //Detecting S_INPUT voltage level
     int alter = ALTER_REPEAT;
     while(1){
 
-        alter = (READ(S_INPUT)) ? alter-1 : ALTER_REPEAT;
+        int trigger = PULL_RESISTOR_DOWN == presistor ? 1 : 
+                    ( PULL_RESISTOR_UP   == presistor ? 0 : -1 );
+        alter = (READ(S_INPUT) == trigger) ? alter-1 : ALTER_REPEAT;
         
         if(0 >= alter){
             sync();
             
-            if(falarm){     
+            if(falarm){
                 printf("False alarm!\n");
             }else if( -1 == reboot(RB_POWER_OFF) ){
                 perror("Can not reboot. ");
