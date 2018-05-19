@@ -21,7 +21,7 @@ gcc GPIO.c shutdown-pin.c -Wall -o shutdown-pin
 After this command, there should be a execute file whcih called shutdown-pin.
 
 ## Run it
-Below command run this program, the default specified pin is GPIO 21, when you give Vcc(HIGH voltage) to this pin, raspberry should start shutdown.
+Below command run this program, the default specified pin is GPIO 21, when you give 3V3 to this pin, raspberry should start shutdown.
 ```
 sudo ./shutdown-pin
 ```
@@ -32,7 +32,7 @@ To test if this program work fine, execute following commands
 sudo ./shutdown-pin --false-alarm
 ```
 the "--false-alarm" tag won't reboot your raspberry pi if this flag is specified, but sending a "False alarm!" string to stdout
-Now connect GPIO 21 to Vcc, wait for 10 seconds, there should be a string "False alarm!" show up in your terminal.
+Now connect GPIO 21 to 3V3, wait for 10 seconds, there should be a string "False alarm!" show up in your terminal.
 
 ## Flags
 | flags |info|
@@ -42,7 +42,7 @@ Now connect GPIO 21 to Vcc, wait for 10 seconds, there should be a string "False
 |--quiet | This program would stop sending any output.|
 |--pin n | Specified a pin as shutdown trigger, n should be a number which between 0 and 53|
 
-__Something about --no-persist__ : Note that if something modify your specified pin mode, It might blow your raspberry pi once you connect that pin to Vcc or GND!!!
+__Something about --no-persist__ : Note that if something modify your specified pin mode, It might blow your raspberry pi once you connect that pin to 3V3 or GND!!!
 
 ## Old raspberry pi configuration
 Because of some architecture difference, the I/O Peripherals physical address is different between pi 1 and pi 2/3.
@@ -66,7 +66,7 @@ You can modify default pin as below
 ./shutdown-pin.c
 Before:     #define DEFAULT_PIN 21
 After:      #define DEFAULT_PIN <THE DEFAULT PIN YOU LIKE>
-``` 
+```
 
 ## Troubleshooting
 If you running into any problem, Please contact with me.
