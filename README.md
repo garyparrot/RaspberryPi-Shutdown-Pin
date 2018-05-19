@@ -67,6 +67,9 @@ You can modify default pin as below
 Before:     #define DEFAULT_PIN 21
 After:      #define DEFAULT_PIN <THE DEFAULT PIN YOU LIKE>
 ```
+## Notice
+Never put voltage which higher than 3.3v to your GPIO input pin, This may damage your pin.
+[https://www.raspberrypi.org/forums/viewtopic.php?t=201698]
 
 ## Troubleshooting
 If you running into any problem, Please contact with me.
