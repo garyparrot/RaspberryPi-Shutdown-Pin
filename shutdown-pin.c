@@ -7,6 +7,8 @@
 #include <time.h>
 #include "GPIO.h"
 
+extern void __attribute__ ((__noreturn__)) exit(int);
+
 #define LOG_FILE     "/var/log/shutdown-pin"
 #define DEFAULT_PIN  21
 #define SLEEP_PERIOD 1
@@ -31,6 +33,27 @@ int atoi(char* num){
     return val;
 }
 
+void __attribute__ ((__noreturn__)) help(){
+    char* help_this_poor_guy = 
+        "Shutdown pin - A hardware way to shut your pie down :(\n"
+        "This is especially useful when you are blocking outside your pie, and you don't want to remove the power(Might harm your pie)\n"
+        "\n[Flags]\n"
+        "--false-alarm : Output a string to log instead of shut your pie down when triggered.\n"
+        "--no-persist : Avoid other badass program change your GPIO setting.\n"
+        "--quiet : Close standard output,mute this program\n"
+        "--no-daemon : Don't run program like a daemon\n"
+        "--pin <number> : Specify the pin number as shutdown trigger\n"
+        "--help, -h : Show this messages\n"
+        "\n[Log]\n"
+        "The Location of Log File => "LOG_FILE"\n"
+        "\n[Notice]\n"
+        "This programn need the permission to halt the device, please give this little program permission :D\n"
+        "\n"
+        "Made by Garyparrot :))))\n";
+    printf("%s",help_this_poor_guy);
+    exit(0);
+}
+
 int programFlags(int args,char** argv){
     for(int i = 1;i < args;i++){
         if(strcasecmp(argv[i],"--false-alarm") == 0)
@@ -46,6 +69,8 @@ int programFlags(int args,char** argv){
                 printf("Unknow specified pin %s\n",argv[i]);
                 return 0;
             }
+        }else if(strcasecmp(argv[i],"--help") == 0 || strcasecmp(argv[i],"-h") == 0){
+            help();
         }else{
             printf("Unknow flags %s\n",argv[i]);
             return 0;
@@ -82,13 +107,13 @@ int main(int args, char** argv){
     setbuffer(stdout,NULL,0);
     errno = 0;
 
-    if(isRoot() == 0){
-        printf("In order to shutdown device, you must to run this program with root permission. \n");
-        return -1;
-    }
     if(programFlags(args,argv) == 0){ 
         printf("Please remove incorrect flags or fix it.\n");
         return -2;
+    }
+    if(isRoot() == 0){
+        printf("In order to shutdown device, you must to run this program with root permission. \n");
+        return -1;
     }
     if((gpio = (int*)mappingIO()) == NULL){
         printf("Can not mapping process, please check for permission. errno code=%d\n",errno);
